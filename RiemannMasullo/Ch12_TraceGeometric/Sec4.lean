@@ -1466,7 +1466,15 @@ private theorem sLocalTraceSharpMass_asymptotic_restrict (φ : BruhatCompactSupp
       (∀ (w : InfinitePlace F) (u : w.Completionˣ),
         (a w).val u = φ.val (archClass(w) u)) ∧
       (∀ (v : S) (u : (v.val.adicCompletion F)ˣ),
-        (b v).val u = φ.val (finiteClass(v.val) u)) := by sorry
+        (b v).val u = φ.val (finiteClass(v.val) u)) := by
+  let τ : ℝ≥0ˣ →ₜ* C𝔽 :=
+    ⟨(QuotientGroup.mk' _).comp (canonicalIdeleNormSection F),
+      continuous_quotient_mk'.comp (canonicalIdeleNormSection_continuous F)⟩
+  obtain ⟨_, _, _, _, _, _, harch, hfinite, _⟩ :=
+    idelicExplicitFormula τ (canonicalIdeleNormSection_rightInverse F)
+  choose a ha _ using fun w ↦ harch w φ
+  choose b hb _ using fun v : S ↦ hfinite v.val φ
+  exact ⟨a, b, ha, hb⟩
 
 /-- Paper: (12.4.1.25)–(12.4.1.28), p. 519. Constant term of the summed sharp masses.
 For each S-unit ξ the constant term of the sharp mass is minus the pairing of the Fourier
