@@ -330,6 +330,18 @@ def decide(check, supplied_base):
     if probe.returncode == 1:
         raise Stop("fail", ["it does not merge cleanly into main: merge main into the branch and "
                             "resolve the conflicts"])
+    candidate = probe.stdout.strip()
+    if probe.returncode or not SHA.fullmatch(candidate):
+        raise Stop("error", ["could not compute the candidate merge tree"], probe.stderr)
+    imports = run(["lean", "--run", str(TOOLS / "scripts/CheckImportAll.lean"),
+                   check.base, candidate], cwd=check.work, timeout=60)
+    if imports.returncode == 3:
+        raise Stop("fail", ["it adds `import all`: use ordinary imports and expose the required lemmas "
+                             "(see AGENTS.md)"], imports.stdout)
+    if imports.returncode == 4:
+        raise Stop("fail", ["it has an invalid Lean import header"], imports.stdout)
+    if imports.returncode:
+        raise Stop("error", ["the import policy check could not be carried out"], imports.stdout)
     base_dump, base_log = check.base_state(supplied_base)
     check.merge(entries)
     held += [r for r in check.held_back_after_merge(entries) if r not in held]
